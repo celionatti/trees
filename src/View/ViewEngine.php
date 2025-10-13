@@ -120,6 +120,15 @@ class ViewEngine
 
     private function renderDirect(string $viewFile, array $data): string
     {
+        // Compile the view content in memory (don't save to disk)
+        $content = file_get_contents($viewFile);
+        $compiler = new ViewCompiler();
+        $compiledContent = $compiler->compile($content);
+
+        // Create a temporary file for the compiled content
+        $tempFile = tempnam(sys_get_temp_dir(), 'view_');
+        file_put_contents($tempFile, $compiledContent);
+
         extract($data, EXTR_SKIP);
 
         // Initialize sections array
@@ -128,8 +137,11 @@ class ViewEngine
 
         ob_start();
         try {
-            include $viewFile;
+            include $tempFile;
             $childContent = ob_get_clean();
+
+            // Clean up temp file
+            @unlink($tempFile);
 
             // If template extends a layout, render the parent
             if (isset($__extends) && $__extends) {
@@ -138,16 +150,33 @@ class ViewEngine
                     throw new \RuntimeException("Parent view [{$__extends}] not found");
                 }
 
+                // Compile parent view
+                $parentContent = file_get_contents($parentView);
+                $compiledParent = $compiler->compile($parentContent);
+
+                $parentTempFile = tempnam(sys_get_temp_dir(), 'view_');
+                file_put_contents($parentTempFile, $compiledParent);
+
                 // Re-extract data for parent template
                 extract($data, EXTR_SKIP);
                 ob_start();
-                include $parentView;
-                return ob_get_clean();
+                include $parentTempFile;
+                $result = ob_get_clean();
+
+                // Clean up parent temp file
+                @unlink($parentTempFile);
+
+                return $result;
             }
 
             return $childContent;
         } catch (\Throwable $e) {
             ob_end_clean();
+            // Clean up temp file on error
+            @unlink($tempFile);
+            if (isset($parentTempFile)) {
+                @unlink($parentTempFile);
+            }
             throw new \RuntimeException("Error rendering view: " . $e->getMessage(), 0, $e);
         }
     }
