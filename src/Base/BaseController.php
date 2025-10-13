@@ -7,8 +7,8 @@ namespace Trees\Base;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Trees\Http\ResponseFactory;
-use Trees\View\ViewEngine;
 use Trees\Security\Validator;
+use Trees\View\ViewEngine;
 
 abstract class BaseController
 {
@@ -24,7 +24,7 @@ abstract class BaseController
             mkdir($cachePath, 0755, true);
         }
         
-        $this->view = new ViewEngine($viewPath, $cachePath, true);
+        $this->view = new ViewEngine($viewPath, $cachePath, false);
         $this->view->share('app_name', $_ENV['APP_NAME'] ?? 'Trees Framework');
     }
     

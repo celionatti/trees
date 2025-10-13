@@ -26,6 +26,9 @@ class ViewEngine
     {
         $data = array_merge($this->sharedData, $data);
 
+        // Always pass the view engine instance for @include support
+        $data['view'] = $this;
+
         $viewFile = $this->getViewPath($view);
 
         if (!file_exists($viewFile)) {
@@ -73,7 +76,7 @@ class ViewEngine
 
     private function renderCompiled(string $compiled, array $data): string
     {
-        extract($data);
+        extract($data, EXTR_SKIP);
 
         // Initialize sections array
         $__sections = [];
@@ -97,6 +100,8 @@ class ViewEngine
                 }
 
                 // Render parent with sections from child
+                // Re-extract data for parent template
+                extract($data, EXTR_SKIP);
                 ob_start();
                 include $parentCompiled;
                 return ob_get_clean();
@@ -105,13 +110,17 @@ class ViewEngine
             return $childContent;
         } catch (\Throwable $e) {
             ob_end_clean();
-            throw new \RuntimeException("Error rendering view: " . $e->getMessage() . "\nFile: " . $compiled, 0, $e);
+            throw new \RuntimeException(
+                "Error rendering view: " . $e->getMessage() . "\nFile: " . $compiled,
+                0,
+                $e
+            );
         }
     }
 
     private function renderDirect(string $viewFile, array $data): string
     {
-        extract($data);
+        extract($data, EXTR_SKIP);
 
         // Initialize sections array
         $__sections = [];
@@ -129,6 +138,8 @@ class ViewEngine
                     throw new \RuntimeException("Parent view [{$__extends}] not found");
                 }
 
+                // Re-extract data for parent template
+                extract($data, EXTR_SKIP);
                 ob_start();
                 include $parentView;
                 return ob_get_clean();
