@@ -3,9 +3,6 @@
 declare(strict_types=1);
 
 if (!function_exists('env')) {
-    /**
-     * Get environment variable
-     */
     function env(string $key, $default = null)
     {
         $value = $_ENV[$key] ?? getenv($key);
@@ -14,7 +11,6 @@ if (!function_exists('env')) {
             return $default;
         }
         
-        // Parse boolean values
         switch (strtolower($value)) {
             case 'true':
             case '(true)':
@@ -32,9 +28,6 @@ if (!function_exists('env')) {
 }
 
 if (!function_exists('config')) {
-    /**
-     * Get configuration value
-     */
     function config(string $key, $default = null)
     {
         static $config = [];
@@ -64,9 +57,6 @@ if (!function_exists('config')) {
 }
 
 if (!function_exists('base_path')) {
-    /**
-     * Get base path
-     */
     function base_path(string $path = ''): string
     {
         return __DIR__ . '/../../' . ltrim($path, '/');
@@ -74,9 +64,6 @@ if (!function_exists('base_path')) {
 }
 
 if (!function_exists('storage_path')) {
-    /**
-     * Get storage path
-     */
     function storage_path(string $path = ''): string
     {
         return base_path('storage/' . ltrim($path, '/'));
@@ -84,9 +71,6 @@ if (!function_exists('storage_path')) {
 }
 
 if (!function_exists('public_path')) {
-    /**
-     * Get public path
-     */
     function public_path(string $path = ''): string
     {
         return base_path('public/' . ltrim($path, '/'));
@@ -94,9 +78,6 @@ if (!function_exists('public_path')) {
 }
 
 if (!function_exists('view')) {
-    /**
-     * Render a view
-     */
     function view(string $view, array $data = []): string
     {
         $engine = new \Trees\View\ViewEngine(
@@ -110,9 +91,6 @@ if (!function_exists('view')) {
 }
 
 if (!function_exists('csrf_token')) {
-    /**
-     * Get CSRF token
-     */
     function csrf_token(): string
     {
         return \Trees\Security\Csrf::token();
@@ -120,9 +98,6 @@ if (!function_exists('csrf_token')) {
 }
 
 if (!function_exists('csrf_field')) {
-    /**
-     * Generate CSRF field
-     */
     function csrf_field(): string
     {
         return \Trees\Security\Csrf::field();
@@ -130,9 +105,6 @@ if (!function_exists('csrf_field')) {
 }
 
 if (!function_exists('old')) {
-    /**
-     * Get old input value
-     */
     function old(string $key, $default = null)
     {
         return $_SESSION['_old_input'][$key] ?? $default;
@@ -140,9 +112,6 @@ if (!function_exists('old')) {
 }
 
 if (!function_exists('redirect')) {
-    /**
-     * Create redirect response
-     */
     function redirect(string $url, int $status = 302): \Psr\Http\Message\ResponseInterface
     {
         return \Trees\Http\ResponseFactory::redirect($url, $status);
@@ -150,9 +119,6 @@ if (!function_exists('redirect')) {
 }
 
 if (!function_exists('response')) {
-    /**
-     * Create response
-     */
     function response($content = '', int $status = 200, array $headers = []): \Psr\Http\Message\ResponseInterface
     {
         if (is_array($content) || is_object($content)) {
@@ -164,9 +130,6 @@ if (!function_exists('response')) {
 }
 
 if (!function_exists('abort')) {
-    /**
-     * Abort with HTTP status code
-     */
     function abort(int $code, string $message = ''): void
     {
         throw new \RuntimeException($message ?: "HTTP {$code}", $code);
@@ -174,9 +137,6 @@ if (!function_exists('abort')) {
 }
 
 if (!function_exists('dd')) {
-    /**
-     * Dump and die (for debugging)
-     */
     function dd(...$vars): void
     {
         foreach ($vars as $var) {
@@ -189,9 +149,6 @@ if (!function_exists('dd')) {
 }
 
 if (!function_exists('sanitize')) {
-    /**
-     * Sanitize input
-     */
     function sanitize($value, string $type = 'string')
     {
         $method = [\Trees\Security\Sanitizer::class, $type];
@@ -205,9 +162,6 @@ if (!function_exists('sanitize')) {
 }
 
 if (!function_exists('escape')) {
-    /**
-     * Escape HTML
-     */
     function escape($value): string
     {
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
@@ -215,9 +169,6 @@ if (!function_exists('escape')) {
 }
 
 if (!function_exists('url')) {
-    /**
-     * Generate URL
-     */
     function url(string $path = ''): string
     {
         $base = rtrim(env('APP_URL', 'http://localhost'), '/');
@@ -226,9 +177,6 @@ if (!function_exists('url')) {
 }
 
 if (!function_exists('asset')) {
-    /**
-     * Generate asset URL
-     */
     function asset(string $path): string
     {
         return url('assets/' . ltrim($path, '/'));
@@ -236,9 +184,6 @@ if (!function_exists('asset')) {
 }
 
 if (!function_exists('now')) {
-    /**
-     * Get current timestamp
-     */
     function now(): int
     {
         return time();
@@ -246,9 +191,6 @@ if (!function_exists('now')) {
 }
 
 if (!function_exists('logger')) {
-    /**
-     * Simple logger function
-     */
     function logger(string $message, string $level = 'info'): void
     {
         $logFile = storage_path('logs/app.log');

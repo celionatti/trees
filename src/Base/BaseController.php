@@ -16,15 +16,34 @@ abstract class BaseController
     
     public function __construct()
     {
-        $this->view = new ViewEngine(ROOT_PATH . '/views', ROOT_PATH . '/storage/views', true);
+        $viewPath = ROOT_PATH . '/views';
+        $cachePath = ROOT_PATH . '/storage/views';
         
-        $this->view->share('app_name', 'Trees Framework');
+        // Ensure cache directory exists
+        if (!is_dir($cachePath)) {
+            mkdir($cachePath, 0755, true);
+        }
+        
+        $this->view = new ViewEngine($viewPath, $cachePath, true);
+        $this->view->share('app_name', $_ENV['APP_NAME'] ?? 'Trees Framework');
     }
     
     protected function view(string $view, array $data = []): ResponseInterface
     {
-        $html = $this->view->render($view, $data);
-        return ResponseFactory::html($html);
+        try {
+            $html = $this->view->render($view, $data);
+            return ResponseFactory::html($html);
+        } catch (\Throwable $e) {
+            // Better error handling
+            if ($_ENV['APP_DEBUG'] ?? false) {
+                throw $e;
+            }
+            
+            return ResponseFactory::html(
+                '<h1>View Error</h1><p>Unable to render view.</p>',
+                500
+            );
+        }
     }
     
     protected function json($data, int $status = 200): ResponseInterface

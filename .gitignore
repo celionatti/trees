@@ -1,5 +1,6 @@
 /vendor/
 /node_modules/
+/storage/*
 /storage/logs/*
 /storage/cache/*
 /storage/sessions/*
@@ -25,4 +26,5 @@ yarn.lock
 /app/
 /bootstrap/
 /views/
+/database/
 /tests/
