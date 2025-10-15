@@ -19,6 +19,7 @@ class Application
 
     public function __construct()
     {
+        $this->loadFunctions();
         $this->dispatcher = new MiddlewareDispatcher();
         $this->fallbackHandler = function (ServerRequestInterface $request) {
             $body = new Stream(fopen('php://temp', 'w+'));
@@ -43,10 +44,10 @@ class Application
     public function run(?ServerRequestInterface $request = null): void
     {
         $request = $request ?? $this->createServerRequest();
-        
+
         // Set the fallback handler before handling the request
         $this->dispatcher->setFallbackHandler($this->fallbackHandler);
-        
+
         $response = $this->dispatcher->handle($request);
         $this->emitResponse($response);
     }
@@ -55,7 +56,7 @@ class Application
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
-        
+
         // Parse query string
         $queryParams = [];
         if (isset($_SERVER['QUERY_STRING'])) {
@@ -71,7 +72,7 @@ class Application
         }
 
         $body = new Stream(fopen('php://input', 'r'));
-        
+
         $request = new ServerRequest(
             $method,
             $uri,
@@ -91,7 +92,7 @@ class Application
     private function normalizeFiles(array $files): array
     {
         $normalized = [];
-        
+
         foreach ($files as $key => $value) {
             if (is_array($value) && isset($value['tmp_name'])) {
                 // Single file or multiple files with same name
@@ -115,7 +116,7 @@ class Application
                 $normalized[$key] = $this->normalizeFiles($value);
             }
         }
-        
+
         return $normalized;
     }
 
@@ -140,5 +141,25 @@ class Application
 
         // Send body
         echo $response->getBody();
+    }
+
+    /**
+     * Load helper functions.
+     */
+    private function loadFunctions(): void
+    {
+        $functionsDir = __DIR__ . '/functions/';
+
+        if (!is_dir($functionsDir)) {
+            return;
+        }
+
+        $files = glob($functionsDir . '*.php');
+
+        foreach ($files as $file) {
+            if (file_exists($file) && is_file($file)) {
+                require_once $file;
+            }
+        }
     }
 }

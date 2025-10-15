@@ -7,10 +7,7 @@
         "psr-4": {
             "Trees\\": "src/",
             "App\\": "app/"
-        },
-        "files": [
-            "src/Support/helpers.php"
-        ]
+        }
     },
     "authors": [
         {
