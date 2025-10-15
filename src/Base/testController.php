@@ -7,22 +7,25 @@ namespace Trees\Base;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Trees\Http\ResponseFactory;
-use Trees\View\ViewEngine;
 use Trees\Security\Validator;
-use Trees\Database\Connection;
+use Trees\View\ViewEngine;
 
 abstract class BaseController
 {
     protected $view;
-    protected $db;
     
-    public function __construct(ViewEngine $view, ?Connection $db = null)
+    public function __construct()
     {
-        $this->view = $view;
-        $this->db = $db;
+        $viewPath = ROOT_PATH . '/views';
+        $cachePath = ROOT_PATH . '/storage/views';
         
-        // Share common data with views
-        $this->view->share('app_name', config('app.name', 'Trees Framework'));
+        // Ensure cache directory exists
+        if (!is_dir($cachePath)) {
+            mkdir($cachePath, 0755, true);
+        }
+        
+        $this->view = new ViewEngine($viewPath, $cachePath, false);
+        $this->view->share('app_name', $_ENV['APP_NAME'] ?? 'Trees Framework');
     }
     
     protected function view(string $view, array $data = []): ResponseInterface
@@ -31,7 +34,8 @@ abstract class BaseController
             $html = $this->view->render($view, $data);
             return ResponseFactory::html($html);
         } catch (\Throwable $e) {
-            if (config('app.debug', false)) {
+            // Better error handling
+            if ($_ENV['APP_DEBUG'] ?? false) {
                 throw $e;
             }
             

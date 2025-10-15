@@ -6,11 +6,11 @@ if (!function_exists('env')) {
     function env(string $key, $default = null)
     {
         $value = $_ENV[$key] ?? getenv($key);
-        
+
         if ($value === false) {
             return $default;
         }
-        
+
         switch (strtolower($value)) {
             case 'true':
             case '(true)':
@@ -22,44 +22,62 @@ if (!function_exists('env')) {
             case '(null)':
                 return null;
         }
-        
+
         return $value;
     }
 }
 
-if (!function_exists('config')) {
-    function config(string $key, $default = null)
+if (!function_exists('app')) {
+    /**
+     * Get the container instance or resolve a binding
+     */
+    function app(string|null $abstract = null, array $parameters = [])
     {
-        static $config = [];
-        
-        [$file, $item] = explode('.', $key, 2);
-        
-        if (!isset($config[$file])) {
-            $path = __DIR__ . '/../../config/' . $file . '.php';
-            if (file_exists($path)) {
-                $config[$file] = require $path;
-            } else {
-                return $default;
-            }
+        $container = \Trees\Container\Container::getInstance();
+
+        if ($abstract === null) {
+            return $container;
         }
-        
-        $value = $config[$file];
-        foreach (explode('.', $item) as $segment) {
-            if (is_array($value) && array_key_exists($segment, $value)) {
-                $value = $value[$segment];
-            } else {
-                return $default;
-            }
+
+        return $container->make($abstract, $parameters);
+    }
+}
+
+if (!function_exists('resolve')) {
+    /**
+     * Resolve a class from the container
+     */
+    function resolve(string $abstract, array $parameters = [])
+    {
+        return app($abstract, $parameters);
+    }
+}
+
+if (!function_exists('config')) {
+    /**
+     * Get / set configuration value
+     */
+    function config(string|null $key = null, $default = null)
+    {
+        if ($key === null) {
+            return \Trees\Config::all();
         }
-        
-        return $value;
+
+        if (is_array($key)) {
+            foreach ($key as $k => $v) {
+                \Trees\Config::set($k, $v);
+            }
+            return null;
+        }
+
+        return \Trees\Config::get($key, $default);
     }
 }
 
 if (!function_exists('base_path')) {
     function base_path(string $path = ''): string
     {
-        return __DIR__ . '/../../' . ltrim($path, '/');
+        return ROOT_PATH . '/' . ltrim($path, '/');
     }
 }
 
@@ -81,11 +99,11 @@ if (!function_exists('view')) {
     function view(string $view, array $data = []): string
     {
         $engine = new \Trees\View\ViewEngine(
-            base_path('app/Views'),
+            base_path('views'),
             storage_path('views'),
             !env('APP_DEBUG', false)
         );
-        
+
         return $engine->render($view, $data);
     }
 }
@@ -124,7 +142,7 @@ if (!function_exists('response')) {
         if (is_array($content) || is_object($content)) {
             return \Trees\Http\ResponseFactory::json($content, $status, $headers);
         }
-        
+
         return \Trees\Http\ResponseFactory::html((string) $content, $status, $headers);
     }
 }
@@ -152,11 +170,11 @@ if (!function_exists('sanitize')) {
     function sanitize($value, string $type = 'string')
     {
         $method = [\Trees\Security\Sanitizer::class, $type];
-        
+
         if (is_callable($method)) {
             return call_user_func($method, $value);
         }
-        
+
         return \Trees\Security\Sanitizer::string($value);
     }
 }
@@ -195,14 +213,14 @@ if (!function_exists('logger')) {
     {
         $logFile = storage_path('logs/app.log');
         $logDir = dirname($logFile);
-        
+
         if (!is_dir($logDir)) {
             mkdir($logDir, 0755, true);
         }
-        
+
         $timestamp = date('Y-m-d H:i:s');
         $line = "[{$timestamp}] [{$level}] {$message}" . PHP_EOL;
-        
+
         file_put_contents($logFile, $line, FILE_APPEND | LOCK_EX);
     }
 }

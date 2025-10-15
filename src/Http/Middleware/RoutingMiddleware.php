@@ -4,43 +4,34 @@ declare(strict_types=1);
 
 namespace Trees\Http\Middleware;
 
+use Trees\Http\Router;
+use Trees\Container\Container;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use Trees\Http\Message\Response;
 
 class RoutingMiddleware implements MiddlewareInterface
 {
-    private $routes = [];
-
-    public function route(string $path, callable $handler, string $method = 'GET'): self
+    private $router;
+    private $container;
+    
+    public function __construct(Router $router, Container $container)
     {
-        $this->routes[] = [
-            'path' => $path,
-            'handler' => $handler,
-            'method' => strtoupper($method)
-        ];
-        return $this;
+        $this->router = $router;
+        $this->container = $container;
     }
-
-    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
-    {
-        $path = $request->getUri()->getPath();
-        $method = $request->getMethod();
-
-        foreach ($this->routes as $route) {
-            if ($this->matchesRoute($route, $path, $method)) {
-                return $route['handler']($request);
-            }
+    
+    public function process(
+        ServerRequestInterface $request,
+        RequestHandlerInterface $handler
+    ): ResponseInterface {
+        $response = $this->router->dispatch($request);
+        
+        if ($response !== null) {
+            return $response;
         }
-
-        // No route matched, pass to next middleware
+        
         return $handler->handle($request);
-    }
-
-    private function matchesRoute(array $route, string $path, string $method): bool
-    {
-        return $route['method'] === $method && $route['path'] === $path;
     }
 }
