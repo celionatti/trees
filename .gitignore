@@ -9,7 +9,7 @@
 .DS_Store
 /.idea/
 /.vscode/
-/.env*
+/.env
 composer.lock
 package-lock.json
 package.json
