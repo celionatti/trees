@@ -19,7 +19,6 @@ yarn.lock
 /.cache/
 /.eslintcache
 *.log
-/docs/
 /public/
 /dist/
 /routes/
