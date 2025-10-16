@@ -19,12 +19,3 @@ yarn.lock
 /.cache/
 /.eslintcache
 *.log
-/public/
-/dist/
-/routes/
-/config/
-/app/
-/bootstrap/
-/views/
-/database/
-/tests/
