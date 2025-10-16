@@ -9,6 +9,10 @@ return function (Router $router) {
     // Home routes
     $router->get('/', 'App\Controllers\HomeController@index');
     $router->get('/about', 'App\Controllers\HomeController@about');
+
+    $router->get('/login', 'App\Controllers\AuthController@showLoginForm');
+
+    $router->post('/login', ['App\Controllers\AuthController', 'login']);
     
     // User routes with RESTful pattern
     $router->get('/users', 'App\Controllers\UserController@index');

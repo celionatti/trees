@@ -11,13 +11,11 @@
 </head>
 
 <body class="h-full bg-gray-50">
-    @include('partials.header')
 
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         @yield('content')
     </main>
 
-    @include('partials.footer')
 </body>
 
 </html>

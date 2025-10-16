@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Laravel Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar-group:hover .sidebar-dropdown {
+            display: block;
+        }
+        .active-menu {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            color: #3b82f6;
+        }
+        .active-menu i {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out md:translate-x-0 -translate-x-full fixed md:relative z-20 h-full" id="sidebar">
+            <!-- Logo -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-700">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-cube text-white"></i>
+                    </div>
+                    <span class="text-xl font-bold">AdminPanel</span>
+                </div>
+                <button id="sidebar-close" class="text-gray-400 hover:text-white md:hidden">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- User Profile -->
+            <div class="p-4 border-b border-gray-700 flex items-center space-x-3">
+                <img class="h-10 w-10 rounded-full object-cover" src="https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff" alt="Admin User">
+                <div>
+                    <p class="font-medium">Admin User</p>
+                    <p class="text-xs text-gray-400">Administrator</p>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="mt-4 px-2">
+                <div class="space-y-1">
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md active-menu">
+                        <i class="fas fa-home mr-3 text-gray-400"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    
+                    <div class="sidebar-group">
+                        <a href="#" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                            <div class="flex items-center">
+                                <i class="fas fa-shopping-cart mr-3 text-gray-400"></i>
+                                <span>E-commerce</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </a>
+                        <div class="sidebar-dropdown hidden mt-1 space-y-1 pl-4">
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">Products</a>
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">Categories</a>
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">Orders</a>
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">Customers</a>
+                        </div>
+                    </div>
+                    
+                    <div class="sidebar-group">
+                        <a href="#" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-bar mr-3 text-gray-400"></i>
+                                <span>Analytics</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </a>
+                        <div class="sidebar-dropdown hidden mt-1 space-y-1 pl-4">
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">Reports</a>
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">Statistics</a>
+                        </div>
+                    </div>
+                    
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                        <i class="fas fa-envelope mr-3 text-gray-400"></i>
+                        <span>Messages</span>
+                        <span class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">5</span>
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                        <i class="fas fa-calendar mr-3 text-gray-400"></i>
+                        <span>Calendar</span>
+                    </a>
+                    
+                    <div class="sidebar-group">
+                        <a href="#" class="flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                            <div class="flex items-center">
+                                <i class="fas fa-cog mr-3 text-gray-400"></i>
+                                <span>Settings</span>
+                            </div>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </a>
+                        <div class="sidebar-dropdown hidden mt-1 space-y-1 pl-4">
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">General</a>
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">Security</a>
+                            <a href="#" class="block px-3 py-2 text-sm rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">Notifications</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="pt-6 mt-6 border-t border-gray-700">
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                        <i class="fas fa-question-circle mr-3 text-gray-400"></i>
+                        <span>Help & Support</span>
+                    </a>
+                    <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-gray-700 hover:text-white">
+                        <i class="fas fa-sign-out-alt mr-3 text-gray-400"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </nav>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden md:ml-0">
+            <!-- Header -->
+            <header class="bg-white shadow-sm z-10">
+                <div class="flex items-center justify-between px-4 py-3">
+                    <div class="flex items-center">
+                        <button id="menu-toggle" class="text-gray-500 hover:text-gray-700 focus:outline-none md:hidden">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <div class="ml-4 relative">
+                            <input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-500 hover:text-gray-700 relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                        </button>
+                        
+                        <div class="relative">
+                            <button class="flex items-center text-gray-700 hover:text-gray-900 focus:outline-none">
+                                <img class="h-8 w-8 rounded-full object-cover" src="https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff" alt="Admin User">
+                                <span class="ml-2 hidden md:block">Admin User</span>
+                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+                    <p class="text-gray-600">Welcome back, Admin! Here's what's happening today.</p>
+                </div>
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-500">
+                                <i class="fas fa-shopping-cart text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Total Orders</h3>
+                                <p class="text-2xl font-bold text-gray-900">1,248</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <span class="text-green-500 font-medium"><i class="fas fa-arrow-up"></i> 12%</span> from last month
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 text-green-500">
+                                <i class="fas fa-dollar-sign text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Revenue</h3>
+                                <p class="text-2xl font-bold text-gray-900">$24,580</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <span class="text-green-500 font-medium"><i class="fas fa-arrow-up"></i> 8%</span> from last month
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 text-purple-500">
+                                <i class="fas fa-users text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Customers</h3>
+                                <p class="text-2xl font-bold text-gray-900">892</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <span class="text-green-500 font-medium"><i class="fas fa-arrow-up"></i> 5%</span> from last month
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 text-yellow-500">
+                                <i class="fas fa-chart-line text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-sm font-medium text-gray-500">Growth</h3>
+                                <p class="text-2xl font-bold text-gray-900">+24.5%</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-gray-600">
+                            <span class="text-green-500 font-medium"><i class="fas fa-arrow-up"></i> 4.2%</span> from last month
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Sales Overview</h3>
+                        <div class="h-80 bg-gray-50 rounded flex items-center justify-center border border-gray-200">
+                            <div class="text-center">
+                                <i class="fas fa-chart-bar text-4xl text-gray-400 mb-2"></i>
+                                <p class="text-gray-500">Sales chart visualization</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4">Traffic Sources</h3>
+                        <div class="h-80 bg-gray-50 rounded flex items-center justify-center border border-gray-200">
+                            <div class="text-center">
+                                <i class="fas fa-chart-pie text-4xl text-gray-400 mb-2"></i>
+                                <p class="text-gray-500">Traffic sources chart</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity & Top Products -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">Recent Activity</h3>
+                            <a href="#" class="text-sm text-blue-500 hover:text-blue-700">View all</a>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <i class="fas fa-shopping-cart text-blue-500"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-900">New order received</p>
+                                    <p class="text-sm text-gray-500">Order #1234 from John Smith</p>
+                                    <p class="text-xs text-gray-400">2 hours ago</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                        <i class="fas fa-user-plus text-green-500"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-900">New customer registered</p>
+                                    <p class="text-sm text-gray-500">Jane Doe signed up for an account</p>
+                                    <p class="text-xs text-gray-400">5 hours ago</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                        <i class="fas fa-chart-line text-purple-500"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-900">Monthly report generated</p>
+                                    <p class="text-sm text-gray-500">August sales report is now available</p>
+                                    <p class="text-xs text-gray-400">1 day ago</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Top Products -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-800">Top Products</h3>
+                            <a href="#" class="text-sm text-blue-500 hover:text-blue-700">View all</a>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-mobile-alt text-blue-500"></i>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Smartphone X</p>
+                                    <div class="flex items-center">
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-blue-500 h-2 rounded-full" style="width: 75%"></div>
+                                        </div>
+                                        <span class="ml-2 text-xs text-gray-500">75%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-laptop text-green-500"></i>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Laptop Pro</p>
+                                    <div class="flex items-center">
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-green-500 h-2 rounded-full" style="width: 60%"></div>
+                                        </div>
+                                        <span class="ml-2 text-xs text-gray-500">60%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-headphones text-purple-500"></i>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Wireless Headphones</p>
+                                    <div class="flex items-center">
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-purple-500 h-2 rounded-full" style="width: 45%"></div>
+                                        </div>
+                                        <span class="ml-2 text-xs text-gray-500">45%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Toggle sidebar on mobile
+        document.getElementById('menu-toggle').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+        
+        // Close sidebar when clicking the close button
+        document.getElementById('sidebar-close').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.add('-translate-x-full');
+        });
+        
+        // Toggle dropdown menus in sidebar
+        const sidebarGroups = document.querySelectorAll('.sidebar-group > a');
+        sidebarGroups.forEach(group => {
+            group.addEventListener('click', function(e) {
+                if (window.innerWidth >= 768) {
+                    e.preventDefault();
+                    const dropdown = this.nextElementSibling;
+                    dropdown.classList.toggle('hidden');
+                }
+            });
+        });
+        
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuToggle = document.getElementById('menu-toggle');
+            
+            if (window.innerWidth < 768 && 
+                !sidebar.contains(event.target) && 
+                !menuToggle.contains(event.target) && 
+                !sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    </script>
+</body>
+</html>
