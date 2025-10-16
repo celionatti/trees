@@ -149,7 +149,7 @@ class Router
                 $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
 
                 foreach ($params as $key => $value) {
-                    $request = $request->withAttribute($key, $value);
+                    $request = $request->withAttribute((string)$key, $value);
                 }
 
                 $request = $request->withAttribute('_route', $route);

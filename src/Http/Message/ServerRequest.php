@@ -84,6 +84,35 @@ class ServerRequest implements ServerRequestInterface
         return $new;
     }
 
+    /**
+     * Get uploaded file
+     */
+    public function getUploadedFile(string $key): ?\Trees\Upload\UploadedFile
+    {
+        $files = $this->getUploadedFiles();
+
+        if (!isset($files[$key])) {
+            return null;
+        }
+
+        $file = $files[$key];
+
+        if (is_array($file) && !($file instanceof \Trees\Upload\UploadedFile)) {
+            return new \Trees\Upload\UploadedFile($file);
+        }
+
+        return $file instanceof \Trees\Upload\UploadedFile ? $file : null;
+    }
+
+    /**
+     * Check if file was uploaded
+     */
+    public function hasFile(string $key): bool
+    {
+        $file = $this->getUploadedFile($key);
+        return $file !== null && $file->isValid();
+    }
+
     public function getParsedBody()
     {
         return $this->parsedBody;
