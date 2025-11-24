@@ -13,11 +13,23 @@ use Trees\Http\Response;
 
 
 // Add 'use ($pluginId, $view)' to make variables available
-$router->get('/blog', function($request, $params, $container) use ($pluginId, $view) {
-    echo "Plugin ID: " . $pluginId . "<br>";  // Should print: blog-plugin
-    echo "View available: " . ($view ? 'Yes' : 'No') . "<br>";
+// $router->get('/blog', function($request, $params, $container) use ($pluginId, $view) {
+//     echo "Plugin ID: " . $pluginId . "<br>";  // Should print: blog-plugin
+//     echo "View available: " . ($view ? 'Yes' : 'No') . "<br>";
     
-    return Response::html('<h1>It works!</h1>');
+//     return Response::html('<h1>It works!</h1>');
+// }, $pluginId);
+
+$router->get('/blog', function($request, $params, $container) use ($pluginId, $view) {
+    $posts = [/* your data */];
+    
+    if ($view) {
+        $html = $view->render('blogs.index', ['posts' => $posts]);
+        return Response::html($html);
+    }
+    
+    // Fallback if views don't exist
+    return Response::html('<h1>Blog Posts</h1>');
 }, $pluginId);
 
 $router->get('/blog/{id}', function($request, $params, $container) {
