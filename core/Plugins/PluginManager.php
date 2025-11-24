@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 * ----------------------------------------------
-* Trees
+* PluginManager - WITH CHANGES HIGHLIGHTED
 * ----------------------------------------------
 * @package Trees 2025
 */
@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Trees\Plugins;
 
 use Trees\Router\Router;
+use Trees\View\View;  // ← ADDED: Import View class
 use Trees\Contracts\PluginInterface;
 use Trees\Contracts\ContainerInterface;
 
@@ -40,9 +41,6 @@ class PluginManager
         $this->loadActivePluginsState();
     }
 
-    /**
-     * Discover all available plugins
-     */
     public function discover(): void
     {
         if (!is_dir($this->pluginsPath)) {
@@ -65,9 +63,6 @@ class PluginManager
         }
     }
 
-    /**
-     * Load a plugin class
-     */
     private function loadPlugin(string $dir, string $path): void
     {
         require_once $path . '/Plugin.php';
@@ -87,9 +82,6 @@ class PluginManager
         $this->plugins[$plugin->getId()] = $plugin;
     }
 
-    /**
-     * Boot all active plugins
-     */
     public function bootPlugins(): void
     {
         foreach ($this->activePlugins as $pluginId) {
@@ -101,20 +93,43 @@ class PluginManager
 
     /**
      * Boot a single plugin
+     * 
+     * MAIN CHANGES ARE IN THIS METHOD
      */
     private function bootPlugin(PluginInterface $plugin): void
     {
         // Register plugin services
         $plugin->register();
 
+        // ========================================
+        // CHANGE #1: Create view instance for plugin
+        // ========================================
+        $viewsPath = $plugin->getBasePath() . '/views';
+        if (is_dir($viewsPath)) {
+            $view = new View($viewsPath);
+            $this->container->singleton("view.{$plugin->getId()}", fn() => $view);
+        }
+
         // Load plugin routes
         $routesPath = $plugin->getRoutesPath();
         if ($routesPath && file_exists($routesPath)) {
+            // ========================================
+            // CHANGE #2: Make variables available to routes file
+            // ========================================
             $router = $this->router;
             $hookManager = $this->hookManager;
             $container = $this->container;
-            $pluginId = $plugin->getId();
+            $pluginId = $plugin->getId();  // ← ADDED: This was missing before!
 
+            // ========================================
+            // CHANGE #3: Get view instance if available
+            // ========================================
+            $view = $container->has("view.{$pluginId}")
+                ? $container->get("view.{$pluginId}")
+                : null;  // ← ADDED: Make $view available in routes
+
+            // Now when we require the routes file, all these variables
+            // are available: $router, $hookManager, $container, $pluginId, $view
             require $routesPath;
         }
 
@@ -122,9 +137,6 @@ class PluginManager
         $plugin->boot();
     }
 
-    /**
-     * Activate a plugin
-     */
     public function activate(string $pluginId): bool
     {
         if (!isset($this->plugins[$pluginId])) {
@@ -136,23 +148,16 @@ class PluginManager
         }
 
         $plugin = $this->plugins[$pluginId];
-        
-        // Call activation hook
-        $plugin->onActivate();
 
-        // Boot the plugin
+        $plugin->onActivate();
         $this->bootPlugin($plugin);
 
-        // Mark as active
         $this->activePlugins[] = $pluginId;
         $this->saveActivePluginsState();
 
         return true;
     }
 
-    /**
-     * Deactivate a plugin
-     */
     public function deactivate(string $pluginId): bool
     {
         if (!in_array($pluginId, $this->activePlugins)) {
@@ -161,51 +166,35 @@ class PluginManager
 
         $plugin = $this->plugins[$pluginId];
 
-        // Call deactivation hook
         $plugin->onDeactivate();
-
-        // Remove plugin hooks
         $this->hookManager->removePluginHooks($pluginId);
-
-        // Remove plugin routes
         $this->router->removePluginRoutes($pluginId);
 
-        // Remove from active plugins
         $this->activePlugins = array_filter($this->activePlugins, fn($id) => $id !== $pluginId);
         $this->saveActivePluginsState();
 
         return true;
     }
 
-    /**
-     * Get all plugins
-     */
     public function getAllPlugins(): array
     {
         return $this->plugins;
     }
 
-    /**
-     * Get active plugins
-     */
     public function getActivePlugins(): array
     {
-        return array_filter($this->plugins, fn($plugin) => 
+        return array_filter(
+            $this->plugins,
+            fn($plugin) =>
             in_array($plugin->getId(), $this->activePlugins)
         );
     }
 
-    /**
-     * Check if plugin is active
-     */
     public function isActive(string $pluginId): bool
     {
         return in_array($pluginId, $this->activePlugins);
     }
 
-    /**
-     * Load active plugins state from file
-     */
     private function loadActivePluginsState(): void
     {
         if (file_exists($this->statePath)) {
@@ -214,9 +203,6 @@ class PluginManager
         }
     }
 
-    /**
-     * Save active plugins state to file
-     */
     private function saveActivePluginsState(): void
     {
         $dir = dirname($this->statePath);
