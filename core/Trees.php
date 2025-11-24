@@ -45,8 +45,7 @@ class Trees
             $this->container,
             $this->hookManager,
             $this->router,
-            $basePath . '/plugins',
-            $basePath . '/storage/plugins.json'
+            $basePath . '/plugins'
         );
 
         $this->container->singleton('plugin_manager', fn() => $this->pluginManager);

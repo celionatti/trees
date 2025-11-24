@@ -1,6 +1,3 @@
 /vendor/
-/plugins
-/bootstrap
-/public
 composer.lock
 

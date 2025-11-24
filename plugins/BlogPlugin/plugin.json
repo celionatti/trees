@@ -1,0 +1,53 @@
+{
+  "id": "blog-plugin",
+  "name": "Blog Plugin",
+  "description": "A simple blog plugin for Trees framework with posts and categories",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "author_url": "https://yourwebsite.com",
+  "enabled": true,
+  
+  "requires": {
+    "php": "8.1",
+    "extensions": ["json", "mbstring"]
+  },
+  
+  "dependencies": [],
+  
+  "settings": {
+    "posts_per_page": 10,
+    "excerpt_length": 200,
+    "allow_comments": true,
+    "comment_moderation": false,
+    "date_format": "Y-m-d H:i:s",
+    "show_author": true,
+    "cache_enabled": false,
+    "cache_duration": 3600
+  },
+  
+  "permissions": [
+    "view_posts",
+    "create_posts",
+    "edit_posts",
+    "delete_posts",
+    "manage_categories",
+    "moderate_comments"
+  ],
+  
+  "hooks": {
+    "register": [
+      "blog.post.created",
+      "blog.post.updated",
+      "blog.post.deleted",
+      "blog.comment.created"
+    ]
+  },
+  
+  "database": {
+    "tables": [
+      "blog_posts",
+      "blog_categories",
+      "blog_comments"
+    ]
+  }
+}

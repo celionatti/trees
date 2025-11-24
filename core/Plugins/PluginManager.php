@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 * ----------------------------------------------
-* PluginManager - WITH CHANGES HIGHLIGHTED
+* PluginManager - With Individual Plugin Configs
 * ----------------------------------------------
 * @package Trees 2025
 */
@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Trees\Plugins;
 
 use Trees\Router\Router;
-use Trees\View\View;  // ← ADDED: Import View class
+use Trees\View\View;
 use Trees\Contracts\PluginInterface;
 use Trees\Contracts\ContainerInterface;
 
@@ -22,25 +22,24 @@ class PluginManager
     private HookManager $hookManager;
     private Router $router;
     private array $plugins = [];
-    private array $activePlugins = [];
+    private array $pluginConfigs = [];
     private string $pluginsPath;
-    private string $statePath;
 
     public function __construct(
         ContainerInterface $container,
         HookManager $hookManager,
         Router $router,
-        string $pluginsPath,
-        string $statePath
+        string $pluginsPath
     ) {
         $this->container = $container;
         $this->hookManager = $hookManager;
         $this->router = $router;
         $this->pluginsPath = rtrim($pluginsPath, '/');
-        $this->statePath = $statePath;
-        $this->loadActivePluginsState();
     }
 
+    /**
+     * Discover all available plugins and load their configs
+     */
     public function discover(): void
     {
         if (!is_dir($this->pluginsPath)) {
@@ -56,80 +55,118 @@ class PluginManager
 
             $pluginPath = $this->pluginsPath . '/' . $dir;
             $pluginFile = $pluginPath . '/Plugin.php';
+            $configFile = $pluginPath . '/plugin.json';
 
-            if (is_dir($pluginPath) && file_exists($pluginFile)) {
-                $this->loadPlugin($dir, $pluginPath);
+            // Plugin must have both Plugin.php and plugin.json
+            if (is_dir($pluginPath) && file_exists($pluginFile) && file_exists($configFile)) {
+                $this->loadPlugin($dir, $pluginPath, $configFile);
             }
         }
     }
 
-    private function loadPlugin(string $dir, string $path): void
+    /**
+     * Load a plugin and its configuration
+     */
+    private function loadPlugin(string $dir, string $path, string $configFile): void
     {
+        // Load plugin config
+        $configData = json_decode(file_get_contents($configFile), true);
+
+        if (!$configData) {
+            error_log("Invalid plugin.json for: $dir");
+            return;
+        }
+
+        // Validate required config fields
+        if (!isset($configData['id']) || !isset($configData['name'])) {
+            error_log("Plugin config missing required fields (id, name) for: $dir");
+            return;
+        }
+
+        // Load the plugin class
         require_once $path . '/Plugin.php';
 
         $className = 'Plugins\\' . $dir . '\\Plugin';
 
         if (!class_exists($className)) {
+            error_log("Plugin class not found: $className");
             return;
         }
 
         $plugin = new $className($path);
 
         if (!$plugin instanceof PluginInterface) {
+            error_log("Plugin does not implement PluginInterface: $className");
             return;
         }
 
-        $this->plugins[$plugin->getId()] = $plugin;
+        $pluginId = $plugin->getId();
+
+        // Store plugin and its config
+        $this->plugins[$pluginId] = $plugin;
+        $this->pluginConfigs[$pluginId] = $configData;
     }
 
+    /**
+     * Boot all active plugins based on their config
+     */
     public function bootPlugins(): void
     {
-        foreach ($this->activePlugins as $pluginId) {
-            if (isset($this->plugins[$pluginId])) {
-                $this->bootPlugin($this->plugins[$pluginId]);
+        foreach ($this->plugins as $pluginId => $plugin) {
+            $config = $this->pluginConfigs[$pluginId] ?? [];
+
+            // Check if plugin is enabled in its config
+            if (!empty($config['enabled'])) {
+                $this->bootPlugin($plugin, $config);
             }
         }
     }
 
     /**
-     * Boot a single plugin
-     * 
-     * MAIN CHANGES ARE IN THIS METHOD
+     * Boot a single plugin with its configuration
      */
-    private function bootPlugin(PluginInterface $plugin): void
+    private function bootPlugin(PluginInterface $plugin, array $config): void
     {
+        $pluginId = $plugin->getId();
+
+        error_log("Booting plugin: $pluginId");
+
+        // Check dependencies
+        if (!empty($config['dependencies'])) {
+            foreach ($config['dependencies'] as $dependency) {
+                if (!$this->isActive($dependency)) {
+                    error_log("Plugin $pluginId requires $dependency but it's not active");
+                    return;
+                }
+            }
+        }
+
+        // Register plugin configuration in container
+        $this->container->singleton("config.{$pluginId}", fn() => $config);
+
         // Register plugin services
         $plugin->register();
 
-        // ========================================
-        // CHANGE #1: Create view instance for plugin
-        // ========================================
+        // Create view instance if views directory exists
         $viewsPath = $plugin->getBasePath() . '/views';
         if (is_dir($viewsPath)) {
             $view = new View($viewsPath);
-            $this->container->singleton("view.{$plugin->getId()}", fn() => $view);
+            $this->container->singleton("view.{$pluginId}", fn() => $view);
         }
 
         // Load plugin routes
         $routesPath = $plugin->getRoutesPath();
         if ($routesPath && file_exists($routesPath)) {
-            // ========================================
-            // CHANGE #2: Make variables available to routes file
-            // ========================================
             $router = $this->router;
             $hookManager = $this->hookManager;
             $container = $this->container;
-            $pluginId = $plugin->getId();  // ← ADDED: This was missing before!
-
-            // ========================================
-            // CHANGE #3: Get view instance if available
-            // ========================================
             $view = $container->has("view.{$pluginId}")
                 ? $container->get("view.{$pluginId}")
-                : null;  // ← ADDED: Make $view available in routes
+                : null;
 
-            // Now when we require the routes file, all these variables
-            // are available: $router, $hookManager, $container, $pluginId, $view
+            // Make config available in routes
+            $pluginConfig = $config;
+
             require $routesPath;
         }
 
@@ -137,81 +174,188 @@ class PluginManager
         $plugin->boot();
     }
 
+    /**
+     * Activate a plugin (update its config file)
+     */
     public function activate(string $pluginId): bool
     {
         if (!isset($this->plugins[$pluginId])) {
             return false;
         }
 
-        if (in_array($pluginId, $this->activePlugins)) {
-            return true;
+        $config = $this->pluginConfigs[$pluginId];
+
+        if (!empty($config['enabled'])) {
+            return true; // Already active
         }
 
         $plugin = $this->plugins[$pluginId];
 
-        $plugin->onActivate();
-        $this->bootPlugin($plugin);
+        // Update config
+        $config['enabled'] = true;
+        $this->savePluginConfig($pluginId, $config);
 
-        $this->activePlugins[] = $pluginId;
-        $this->saveActivePluginsState();
+        // Call activation hook
+        $plugin->onActivate();
+
+        // Boot the plugin
+        $this->bootPlugin($plugin, $config);
 
         return true;
     }
 
+    /**
+     * Deactivate a plugin (update its config file)
+     */
     public function deactivate(string $pluginId): bool
     {
-        if (!in_array($pluginId, $this->activePlugins)) {
+        if (!isset($this->plugins[$pluginId])) {
             return false;
         }
 
+        $config = $this->pluginConfigs[$pluginId];
+
+        if (empty($config['enabled'])) {
+            return true; // Already inactive
+        }
+
         $plugin = $this->plugins[$pluginId];
 
+        // Call deactivation hook
         $plugin->onDeactivate();
+
+        // Remove plugin hooks
         $this->hookManager->removePluginHooks($pluginId);
+
+        // Remove plugin routes
         $this->router->removePluginRoutes($pluginId);
 
-        $this->activePlugins = array_filter($this->activePlugins, fn($id) => $id !== $pluginId);
-        $this->saveActivePluginsState();
+        // Update config
+        $config['enabled'] = false;
+        $this->savePluginConfig($pluginId, $config);
 
         return true;
     }
 
+    /**
+     * Save plugin configuration to its plugin.json file
+     */
+    private function savePluginConfig(string $pluginId, array $config): void
+    {
+        $plugin = $this->plugins[$pluginId];
+        $configPath = $plugin->getBasePath() . '/plugin.json';
+
+        file_put_contents(
+            $configPath,
+            json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
+        );
+
+        // Update in-memory config
+        $this->pluginConfigs[$pluginId] = $config;
+    }
+
+    /**
+     * Get plugin configuration
+     */
+    public function getPluginConfig(string $pluginId): ?array
+    {
+        return $this->pluginConfigs[$pluginId] ?? null;
+    }
+
+    /**
+     * Update plugin configuration
+     */
+    public function updatePluginConfig(string $pluginId, array $updates): bool
+    {
+        if (!isset($this->pluginConfigs[$pluginId])) {
+            return false;
+        }
+
+        $config = array_merge($this->pluginConfigs[$pluginId], $updates);
+        $this->savePluginConfig($pluginId, $config);
+
+        return true;
+    }
+
+    /**
+     * Get all plugins
+     */
     public function getAllPlugins(): array
     {
         return $this->plugins;
     }
 
+    /**
+     * Get active plugins
+     */
     public function getActivePlugins(): array
     {
-        return array_filter(
-            $this->plugins,
-            fn($plugin) =>
-            in_array($plugin->getId(), $this->activePlugins)
-        );
+        return array_filter($this->plugins, function ($plugin) {
+            $config = $this->pluginConfigs[$plugin->getId()] ?? [];
+            return !empty($config['enabled']);
+        });
     }
 
+    /**
+     * Check if plugin is active
+     */
     public function isActive(string $pluginId): bool
     {
-        return in_array($pluginId, $this->activePlugins);
+        $config = $this->pluginConfigs[$pluginId] ?? [];
+        return !empty($config['enabled']);
     }
 
-    private function loadActivePluginsState(): void
+    /**
+     * Get plugin by ID
+     */
+    public function getPlugin(string $pluginId): ?PluginInterface
     {
-        if (file_exists($this->statePath)) {
-            $data = json_decode(file_get_contents($this->statePath), true);
-            $this->activePlugins = $data['active_plugins'] ?? [];
-        }
+        return $this->plugins[$pluginId] ?? null;
     }
 
-    private function saveActivePluginsState(): void
+    /**
+     * Check if plugin meets minimum system requirements
+     */
+    public function checkRequirements(string $pluginId): array
     {
-        $dir = dirname($this->statePath);
-        if (!is_dir($dir)) {
-            mkdir($dir, 0755, true);
+        $config = $this->pluginConfigs[$pluginId] ?? null;
+
+        if (!$config) {
+            return ['valid' => false, 'errors' => ['Plugin not found']];
         }
 
-        file_put_contents($this->statePath, json_encode([
-            'active_plugins' => $this->activePlugins
-        ]));
+        $errors = [];
+
+        // Check PHP version
+        if (!empty($config['requires']['php'])) {
+            if (version_compare(PHP_VERSION, $config['requires']['php'], '<')) {
+                $errors[] = "Requires PHP {$config['requires']['php']} or higher";
+            }
+        }
+
+        // Check required PHP extensions
+        if (!empty($config['requires']['extensions'])) {
+            foreach ($config['requires']['extensions'] as $extension) {
+                if (!extension_loaded($extension)) {
+                    $errors[] = "Requires PHP extension: $extension";
+                }
+            }
+        }
+
+        // Check dependencies
+        if (!empty($config['dependencies'])) {
+            foreach ($config['dependencies'] as $dependency) {
+                if (!isset($this->plugins[$dependency])) {
+                    $errors[] = "Requires plugin: $dependency";
+                } elseif (!$this->isActive($dependency)) {
+                    $errors[] = "Requires plugin '$dependency' to be active";
+                }
+            }
+        }
+
+        return [
+            'valid' => empty($errors),
+            'errors' => $errors
+        ];
     }
 }
