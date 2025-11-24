@@ -1,0 +1,27 @@
+{
+    "name": "trees/trees",
+    "description": "Trees is a PHP Plugin Framework, With Unique design component that work independently from each other. It use modern PHP standard and follow strictly the PSR Standards also. MVC Pattern, Scalable, Fluent and Adaptable. created by Amisu Usman (Celio Natti)",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Trees\\": "core/",
+            "Plugins\\": "plugins/"
+        }
+    },
+    "authors": [
+        {
+            "name": "celionatti",
+            "email": "amisuusman@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.0",
+        "psr/container": "^2.0",
+        "psr/http-server-handler": "^1.0",
+        "psr/http-server-middleware": "^1.0",
+        "psr/http-message": "^2.0",
+        "vlucas/phpdotenv": "^5.6"
+    }
+}
