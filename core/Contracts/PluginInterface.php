@@ -9,6 +9,8 @@ declare(strict_types=1);
 * @package Trees 2025
 */
 
+namespace Trees\Contracts;
+
 interface PluginInterface
 {
     /**

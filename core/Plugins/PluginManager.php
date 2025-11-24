@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace Trees\Plugins;
 
-use PluginInterface;
 use Trees\Router\Router;
+use Trees\Contracts\PluginInterface;
 use Trees\Contracts\ContainerInterface;
 
 class PluginManager
