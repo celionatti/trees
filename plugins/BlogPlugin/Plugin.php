@@ -66,6 +66,11 @@ class Plugin implements PluginInterface
                 'url' => '/blog',
                 'plugin' => 'blog-plugin'
             ];
+            $items[] = [
+                'label' => 'Create Blog',
+                'url' => '/blog/create',
+                'plugin' => 'blog-plugin'
+            ];
             return $items;
         });
 

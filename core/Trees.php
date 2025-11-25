@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /*
 * ----------------------------------------------
-* Trees
+* Trees - Minimal Core (Everything is a Plugin)
 * ----------------------------------------------
 * @package Trees 2025
 */
@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Trees;
 
 use Trees\Router\Router;
+use Trees\Http\Response;
 use Trees\Http\ServerRequest;
 use Trees\Container\Container;
 use Trees\Plugins\HookManager;
@@ -101,117 +102,61 @@ class Trees
 
     private function notFoundResponse(): ResponseInterface
     {
-        return new class implements ResponseInterface {
-            private string $protocolVersion = '1.1';
-            private array $headers = [];
-            private StreamInterface $body;
-            private int $statusCode = 404;
-            private string $reasonPhrase = 'Not Found';
+        // Allow plugins to customize 404 page
+        $html = $this->hookManager->applyFilters('404.content', $this->default404());
+        return Response::html($html)->withStatus(404);
+    }
 
-            public function __construct()
-            {
-                $this->body = new \Trees\Http\Stream('php://temp', 'wb+');
-                $this->body->write('404 Not Found');
-                $this->body->rewind();
-
-                $this->headers['Content-Type'] = ['text/html; charset=UTF-8'];
-                $this->headers['Content-Length'] = [(string) $this->body->getSize()];
-            }
-
-            public function getProtocolVersion(): string
-            {
-                return $this->protocolVersion;
-            }
-
-            public function withProtocolVersion($version): self
-            {
-                $new = clone $this;
-                $new->protocolVersion = $version;
-                return $new;
-            }
-
-            public function getHeaders(): array
-            {
-                return $this->headers;
-            }
-
-            public function hasHeader($name): bool
-            {
-                return isset($this->headers[$name]);
-            }
-
-            public function getHeader($name): array
-            {
-                return $this->headers[$name] ?? [];
-            }
-
-            public function getHeaderLine($name): string
-            {
-                return implode(', ', $this->getHeader($name));
-            }
-
-            public function withHeader($name, $value): self
-            {
-                $new = clone $this;
-                $new->headers[$name] = is_array($value) ? $value : [$value];
-                return $new;
-            }
-
-            public function withAddedHeader($name, $value): self
-            {
-                $new = clone $this;
-                $new->headers[$name] = array_merge(
-                    $new->headers[$name] ?? [],
-                    is_array($value) ? $value : [$value]
-                );
-                return $new;
-            }
-
-            public function withoutHeader($name): self
-            {
-                $new = clone $this;
-                unset($new->headers[$name]);
-                return $new;
-            }
-
-            public function getBody(): StreamInterface
-            {
-                return $this->body;
-            }
-
-            public function withBody(StreamInterface $body): self
-            {
-                $new = clone $this;
-                $new->body = $body;
-                return $new;
-            }
-
-            public function getStatusCode(): int
-            {
-                return $this->statusCode;
-            }
-
-            public function withStatus($code, $reasonPhrase = ''): self
-            {
-                $new = clone $this;
-                $new->statusCode = $code;
-                $new->reasonPhrase = $reasonPhrase ?: $this->getDefaultReasonPhrase($code);
-                return $new;
-            }
-
-            public function getReasonPhrase(): string
-            {
-                return $this->reasonPhrase;
-            }
-
-            private function getDefaultReasonPhrase(int $code): string
-            {
-                $phrases = [
-                    404 => 'Not Found',
-                ];
-                return $phrases[$code] ?? '';
-            }
-        };
+    private function default404(): string
+    {
+        return '<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #020630ff 0%, #200333ff 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 60px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { font-size: 6em; margin: 0; }
+        p { font-size: 1.5em; margin: 20px 0; }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: white;
+            color: #020927ff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: transform 0.3s;
+        }
+        a:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>404</h1>
+        <p>Page Not Found</p>
+        <a href="/">Go Home</a>
+    </div>
+</body>
+</html>';
     }
 
     public function getContainer(): ContainerInterface

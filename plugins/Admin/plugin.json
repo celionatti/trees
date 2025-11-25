@@ -1,0 +1,15 @@
+{
+  "id": "admin",
+  "name": "Admin Dashboard",
+  "description": "Administration panel for managing plugins and settings",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "enabled": true,
+
+  "settings": {
+    "admin_path": "/admin",
+    "show_in_nav": true,
+    "nav_label": "Admin",
+    "items_per_page": 20
+  }
+}
